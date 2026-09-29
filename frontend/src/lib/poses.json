@@ -1,0 +1,890 @@
+[
+ {
+  "id": "warrior-ii",
+  "name": "Warrior II",
+  "category": [
+   "Standing",
+   "Strength"
+  ],
+  "difficulty": "Beginner",
+  "muscles": "Quadriceps, glutes, shoulders",
+  "benefits": "Builds leg strength and stamina and opens the hips and chest.",
+  "steps": [
+   "Step your feet about a leg's length apart and turn the front foot out.",
+   "Bend the front knee over the ankle.",
+   "Extend both arms level with the floor and gaze over the front hand."
+  ],
+  "mistakes": [
+   "Front knee collapsing inward",
+   "Torso leaning toward the front leg"
+  ],
+  "rules": {
+   "left_knee": [
+    85,
+    110,
+    "Ease out of the lunge slightly.",
+    "Bend your front knee more, keep it over the ankle."
+   ],
+   "right_knee": [
+    165,
+    180,
+    "Straighten your back leg.",
+    ""
+   ],
+   "left_elbow": [
+    165,
+    180,
+    "Extend your front arm fully.",
+    ""
+   ],
+   "right_elbow": [
+    165,
+    180,
+    "Extend your back arm fully.",
+    ""
+   ]
+  },
+  "ref": [
+   [
+    0.5,
+    0.14
+   ],
+   [
+    0.58,
+    0.28
+   ],
+   [
+    0.42,
+    0.28
+   ],
+   [
+    0.72,
+    0.28
+   ],
+   [
+    0.28,
+    0.28
+   ],
+   [
+    0.86,
+    0.28
+   ],
+   [
+    0.14,
+    0.28
+   ],
+   [
+    0.58,
+    0.52
+   ],
+   [
+    0.44,
+    0.52
+   ],
+   [
+    0.82,
+    0.62
+   ],
+   [
+    0.36,
+    0.72
+   ],
+   [
+    0.78,
+    0.9
+   ],
+   [
+    0.24,
+    0.92
+   ]
+  ]
+ },
+ {
+  "id": "tree-pose",
+  "name": "Tree Pose",
+  "category": [
+   "Balance",
+   "Standing",
+   "Beginner"
+  ],
+  "difficulty": "Beginner",
+  "muscles": "Standing leg, core, hip abductors",
+  "benefits": "Improves balance and focus and strengthens the ankle and standing leg.",
+  "steps": [
+   "Stand tall and shift your weight onto one foot.",
+   "Place the other foot on your calf or inner thigh, never on the knee.",
+   "Bring your hands together at your chest or overhead."
+  ],
+  "mistakes": [
+   "Foot pressed against the knee joint",
+   "Hip of the standing leg pushing out"
+  ],
+  "rules": {
+   "right_knee": [
+    160,
+    180,
+    "Keep your standing leg straight.",
+    ""
+   ],
+   "left_knee": [
+    40,
+    90,
+    "Lower your foot slightly to protect the knee.",
+    "Draw the raised knee out to the side."
+   ]
+  },
+  "ref": [
+   [
+    0.5,
+    0.1
+   ],
+   [
+    0.57,
+    0.24
+   ],
+   [
+    0.43,
+    0.24
+   ],
+   [
+    0.55,
+    0.16
+   ],
+   [
+    0.45,
+    0.16
+   ],
+   [
+    0.51,
+    0.08
+   ],
+   [
+    0.49,
+    0.08
+   ],
+   [
+    0.55,
+    0.52
+   ],
+   [
+    0.45,
+    0.52
+   ],
+   [
+    0.66,
+    0.6
+   ],
+   [
+    0.46,
+    0.72
+   ],
+   [
+    0.47,
+    0.68
+   ],
+   [
+    0.46,
+    0.92
+   ]
+  ]
+ },
+ {
+  "id": "mountain-pose",
+  "name": "Mountain Pose",
+  "category": [
+   "Standing",
+   "Beginner"
+  ],
+  "difficulty": "Beginner",
+  "muscles": "Legs, core, postural muscles",
+  "benefits": "Teaches neutral alignment that every other standing pose builds on.",
+  "steps": [
+   "Stand with feet hip-width apart, weight even.",
+   "Lengthen your spine and roll the shoulders back.",
+   "Let the arms hang long with palms facing forward."
+  ],
+  "mistakes": [
+   "Locked knees",
+   "Ribs flaring forward"
+  ],
+  "rules": {
+   "left_knee": [
+    170,
+    180,
+    "Straighten your legs without locking.",
+    ""
+   ],
+   "right_knee": [
+    170,
+    180,
+    "Straighten your legs without locking.",
+    ""
+   ],
+   "left_elbow": [
+    165,
+    180,
+    "Let your arms hang long.",
+    ""
+   ],
+   "right_elbow": [
+    165,
+    180,
+    "Let your arms hang long.",
+    ""
+   ]
+  },
+  "ref": [
+   [
+    0.5,
+    0.1
+   ],
+   [
+    0.56,
+    0.24
+   ],
+   [
+    0.44,
+    0.24
+   ],
+   [
+    0.57,
+    0.4
+   ],
+   [
+    0.43,
+    0.4
+   ],
+   [
+    0.57,
+    0.55
+   ],
+   [
+    0.43,
+    0.55
+   ],
+   [
+    0.54,
+    0.52
+   ],
+   [
+    0.46,
+    0.52
+   ],
+   [
+    0.54,
+    0.72
+   ],
+   [
+    0.46,
+    0.72
+   ],
+   [
+    0.54,
+    0.92
+   ],
+   [
+    0.46,
+    0.92
+   ]
+  ]
+ },
+ {
+  "id": "downward-dog",
+  "name": "Downward Dog",
+  "category": [
+   "Strength",
+   "Flexibility",
+   "Beginner"
+  ],
+  "difficulty": "Beginner",
+  "muscles": "Hamstrings, calves, shoulders",
+  "benefits": "Stretches the back of the body and builds shoulder strength.",
+  "steps": [
+   "Start on hands and knees, tuck your toes.",
+   "Lift your hips up and back.",
+   "Press the floor away and lengthen your spine."
+  ],
+  "mistakes": [
+   "Rounded upper back",
+   "Shoulders creeping toward the ears"
+  ],
+  "rules": {
+   "left_hip": [
+    60,
+    100,
+    "Lift your hips higher and back.",
+    "Lower your hips slightly."
+   ],
+   "right_hip": [
+    60,
+    100,
+    "Lift your hips higher and back.",
+    "Lower your hips slightly."
+   ],
+   "left_knee": [
+    165,
+    180,
+    "Straighten your legs as far as your hamstrings allow.",
+    ""
+   ],
+   "right_elbow": [
+    165,
+    180,
+    "Press through your palms and straighten your arms.",
+    ""
+   ]
+  },
+  "ref": [
+   [
+    0.3,
+    0.62
+   ],
+   [
+    0.22,
+    0.56
+   ],
+   [
+    0.24,
+    0.58
+   ],
+   [
+    0.18,
+    0.72
+   ],
+   [
+    0.2,
+    0.73
+   ],
+   [
+    0.14,
+    0.88
+   ],
+   [
+    0.16,
+    0.89
+   ],
+   [
+    0.52,
+    0.28
+   ],
+   [
+    0.54,
+    0.3
+   ],
+   [
+    0.72,
+    0.58
+   ],
+   [
+    0.74,
+    0.6
+   ],
+   [
+    0.86,
+    0.86
+   ],
+   [
+    0.88,
+    0.88
+   ]
+  ]
+ },
+ {
+  "id": "cobra",
+  "name": "Cobra",
+  "category": [
+   "Strength",
+   "Flexibility",
+   "Intermediate"
+  ],
+  "difficulty": "Intermediate",
+  "muscles": "Spinal extensors, glutes, chest",
+  "benefits": "Strengthens the back and opens the chest.",
+  "steps": [
+   "Lie face down with hands under your shoulders.",
+   "Press gently to lift your chest.",
+   "Keep your elbows soft and shoulders away from your ears."
+  ],
+  "mistakes": [
+   "Crunching the lower back",
+   "Locking the elbows"
+  ],
+  "rules": {
+   "left_hip": [
+    120,
+    160,
+    "Lift your chest a little higher.",
+    "Lower your chest slightly."
+   ],
+   "left_elbow": [
+    130,
+    175,
+    "Straighten your arms slightly to lift your chest.",
+    "Keep a soft bend in the elbows."
+   ],
+   "left_knee": [
+    165,
+    180,
+    "Keep your legs long and together.",
+    ""
+   ]
+  },
+  "ref": [
+   [
+    0.18,
+    0.3
+   ],
+   [
+    0.3,
+    0.38
+   ],
+   [
+    0.32,
+    0.4
+   ],
+   [
+    0.28,
+    0.55
+   ],
+   [
+    0.3,
+    0.56
+   ],
+   [
+    0.3,
+    0.7
+   ],
+   [
+    0.32,
+    0.71
+   ],
+   [
+    0.5,
+    0.62
+   ],
+   [
+    0.52,
+    0.63
+   ],
+   [
+    0.68,
+    0.66
+   ],
+   [
+    0.7,
+    0.67
+   ],
+   [
+    0.86,
+    0.68
+   ],
+   [
+    0.88,
+    0.69
+   ]
+  ]
+ },
+ {
+  "id": "chair-pose",
+  "name": "Chair Pose",
+  "category": [
+   "Standing",
+   "Strength",
+   "Intermediate"
+  ],
+  "difficulty": "Intermediate",
+  "muscles": "Quadriceps, glutes, core",
+  "benefits": "Builds thigh and core strength.",
+  "steps": [
+   "Stand with feet together and bend your knees.",
+   "Sit your hips back as if into a chair.",
+   "Reach your arms overhead, ears between the biceps."
+  ],
+  "mistakes": [
+   "Knees traveling past the toes",
+   "Rounding the lower back"
+  ],
+  "rules": {
+   "left_knee": [
+    80,
+    120,
+    "Rise slightly; you are sitting too deep.",
+    "Sit lower, keep knees over ankles."
+   ],
+   "right_knee": [
+    80,
+    120,
+    "Rise slightly; you are sitting too deep.",
+    "Sit lower, keep knees over ankles."
+   ],
+   "left_elbow": [
+    165,
+    180,
+    "Reach your arms fully overhead.",
+    ""
+   ],
+   "right_elbow": [
+    165,
+    180,
+    "Reach your arms fully overhead.",
+    ""
+   ]
+  },
+  "ref": [
+   [
+    0.5,
+    0.1
+   ],
+   [
+    0.44,
+    0.24
+   ],
+   [
+    0.56,
+    0.24
+   ],
+   [
+    0.4,
+    0.1
+   ],
+   [
+    0.6,
+    0.1
+   ],
+   [
+    0.38,
+    0.02
+   ],
+   [
+    0.62,
+    0.02
+   ],
+   [
+    0.46,
+    0.52
+   ],
+   [
+    0.54,
+    0.52
+   ],
+   [
+    0.42,
+    0.72
+   ],
+   [
+    0.58,
+    0.72
+   ],
+   [
+    0.44,
+    0.94
+   ],
+   [
+    0.56,
+    0.94
+   ]
+  ]
+ },
+ {
+  "id": "triangle-pose",
+  "name": "Triangle Pose",
+  "category": [
+   "Standing",
+   "Flexibility",
+   "Intermediate"
+  ],
+  "difficulty": "Intermediate",
+  "muscles": "Hamstrings, obliques, hips",
+  "benefits": "Lengthens the sides of the body and the hamstrings.",
+  "steps": [
+   "Take a wide stance and turn the front foot out.",
+   "Hinge from the front hip and reach forward.",
+   "Lower one hand to your shin and lift the other to the ceiling."
+  ],
+  "mistakes": [
+   "Collapsing the chest toward the floor",
+   "Bending the front knee"
+  ],
+  "rules": {
+   "left_knee": [
+    165,
+    180,
+    "Straighten your front leg.",
+    ""
+   ],
+   "right_knee": [
+    165,
+    180,
+    "Straighten your back leg.",
+    ""
+   ],
+   "left_elbow": [
+    165,
+    180,
+    "Extend both arms in one line.",
+    ""
+   ],
+   "right_elbow": [
+    165,
+    180,
+    "Extend both arms in one line.",
+    ""
+   ],
+   "left_hip": [
+    70,
+    130,
+    "Come up slightly; hinge from the hip, not the waist.",
+    "Hinge deeper from the hip."
+   ]
+  },
+  "ref": [
+   [
+    0.52,
+    0.2
+   ],
+   [
+    0.6,
+    0.28
+   ],
+   [
+    0.44,
+    0.3
+   ],
+   [
+    0.75,
+    0.2
+   ],
+   [
+    0.3,
+    0.45
+   ],
+   [
+    0.88,
+    0.06
+   ],
+   [
+    0.26,
+    0.62
+   ],
+   [
+    0.56,
+    0.52
+   ],
+   [
+    0.44,
+    0.54
+   ],
+   [
+    0.7,
+    0.74
+   ],
+   [
+    0.36,
+    0.76
+   ],
+   [
+    0.82,
+    0.94
+   ],
+   [
+    0.28,
+    0.94
+   ]
+  ]
+ },
+ {
+  "id": "plank",
+  "name": "Plank",
+  "category": [
+   "Strength",
+   "Beginner"
+  ],
+  "difficulty": "Beginner",
+  "muscles": "Core, shoulders, glutes",
+  "benefits": "Builds core stability and shoulder strength.",
+  "steps": [
+   "Place hands under your shoulders.",
+   "Step your feet back and lengthen from head to heels.",
+   "Draw your navel in and hold."
+  ],
+  "mistakes": [
+   "Hips sagging",
+   "Hips piking up"
+  ],
+  "rules": {
+   "left_elbow": [
+    165,
+    180,
+    "Straighten your arms under your shoulders.",
+    ""
+   ],
+   "left_knee": [
+    165,
+    180,
+    "Straighten your legs.",
+    ""
+   ],
+   "left_hip": [
+    160,
+    180,
+    "Lift your hips in line with shoulders and heels.",
+    ""
+   ]
+  },
+  "ref": [
+   [
+    0.14,
+    0.3
+   ],
+   [
+    0.24,
+    0.38
+   ],
+   [
+    0.26,
+    0.4
+   ],
+   [
+    0.24,
+    0.55
+   ],
+   [
+    0.26,
+    0.56
+   ],
+   [
+    0.24,
+    0.72
+   ],
+   [
+    0.26,
+    0.73
+   ],
+   [
+    0.5,
+    0.42
+   ],
+   [
+    0.52,
+    0.44
+   ],
+   [
+    0.72,
+    0.46
+   ],
+   [
+    0.74,
+    0.48
+   ],
+   [
+    0.94,
+    0.5
+   ],
+   [
+    0.96,
+    0.52
+   ]
+  ]
+ },
+ {
+  "id": "goddess-pose",
+  "name": "Goddess Pose",
+  "category": [
+   "Standing",
+   "Strength",
+   "Intermediate"
+  ],
+  "difficulty": "Intermediate",
+  "muscles": "Inner thighs, glutes, calves",
+  "benefits": "Builds lower-body strength and opens the hips.",
+  "steps": [
+   "Step your feet wide apart, toes turned out.",
+   "Bend your knees over your toes and sink your hips down.",
+   "Raise your arms to shoulder height, elbows bent, palms forward."
+  ],
+  "mistakes": [
+   "Knees collapsing inward",
+   "Not sinking hips low enough"
+  ],
+  "rules": {
+   "left_knee": [
+    90,
+    130,
+    "Rise slightly; you're sitting too low.",
+    "Sink your hips lower, knees over toes."
+   ],
+   "right_knee": [
+    90,
+    130,
+    "Rise slightly; you're sitting too low.",
+    "Sink your hips lower, knees over toes."
+   ],
+   "left_elbow": [
+    70,
+    110,
+    "Bend your elbows to shoulder height.",
+    "Straighten your arms slightly."
+   ],
+   "right_elbow": [
+    70,
+    110,
+    "Bend your elbows to shoulder height.",
+    "Straighten your arms slightly."
+   ]
+  },
+  "ref": [
+   [
+    0.5,
+    0.1
+   ],
+   [
+    0.42,
+    0.24
+   ],
+   [
+    0.58,
+    0.24
+   ],
+   [
+    0.3,
+    0.24
+   ],
+   [
+    0.7,
+    0.24
+   ],
+   [
+    0.28,
+    0.08
+   ],
+   [
+    0.72,
+    0.08
+   ],
+   [
+    0.44,
+    0.5
+   ],
+   [
+    0.56,
+    0.5
+   ],
+   [
+    0.32,
+    0.72
+   ],
+   [
+    0.68,
+    0.72
+   ],
+   [
+    0.34,
+    0.94
+   ],
+   [
+    0.66,
+    0.94
+   ]
+  ]
+ }
+]

@@ -1,0 +1,49 @@
+@tailwind base;@tailwind components;@tailwind utilities;
+body{@apply bg-bone text-ink font-sans antialiased;font-variant-numeric:tabular-nums}
+:focus-visible{outline:2px solid #4F7458;outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+@keyframes pagein{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.page-in{animation:pagein .22s ease-out}
+@keyframes slide{0%{margin-left:-33%}100%{margin-left:100%}}
+html.hc{--hc:1}html.hc .text-mute{color:#3A3F44}html.hc .border-line{border-color:#8A8F94}html.hc .bg-line{background-color:#B5B8BB}
+html.rm *,html.rm *::before,html.rm *::after{animation:none!important;transition:none!important}
+
+/* ---- Motion utilities: subtle, respects reduce-motion (see html.rm rule above) ---- */
+@keyframes fadeUp { from { opacity: 0; transform: translateY(10px) } to { opacity: 1; transform: none } }
+@keyframes floaty { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-4px) } }
+@keyframes shimmer { 0% { background-position: -200% 0 } 100% { background-position: 200% 0 } }
+@keyframes popIn { 0% { transform: scale(.6); opacity: 0 } 70% { transform: scale(1.12) } 100% { transform: scale(1); opacity: 1 } }
+@keyframes dotPulse { 0%,100% { box-shadow: 0 0 0 0 rgba(79,116,88,.45) } 70% { box-shadow: 0 0 0 6px rgba(79,116,88,0) } }
+@keyframes underlineIn { from { transform: scaleX(0) } to { transform: scaleX(1) } }
+
+.reveal { opacity: 0; }
+.reveal.in { animation: fadeUp .5s cubic-bezier(.16,.8,.3,1) both; }
+.reveal.in:nth-child(1) { animation-delay: 0ms }
+.reveal.in:nth-child(2) { animation-delay: 60ms }
+.reveal.in:nth-child(3) { animation-delay: 120ms }
+.reveal.in:nth-child(4) { animation-delay: 180ms }
+.reveal.in:nth-child(5) { animation-delay: 240ms }
+.reveal.in:nth-child(6) { animation-delay: 300ms }
+.reveal.in:nth-child(n+7) { animation-delay: 340ms }
+
+.pop-in { animation: popIn .32s cubic-bezier(.34,1.56,.64,1) both; }
+.float-slow { animation: floaty 4.5s ease-in-out infinite; }
+.live-dot { animation: dotPulse 1.8s ease-out infinite; }
+
+.shimmer { position: relative; overflow: hidden; background: linear-gradient(90deg, #ECECE6 25%, #F5F5F1 37%, #ECECE6 63%); background-size: 200% 100%; animation: shimmer 1.4s ease-in-out infinite; }
+
+.row-hover { transition: background-color .15s ease, transform .15s ease; }
+.row-hover:hover { transform: translateX(2px); }
+
+.lift { transition: transform .15s ease, box-shadow .15s ease; }
+.lift:hover { transform: translateY(-2px); box-shadow: 0 6px 16px -8px rgba(34,38,42,.25); }
+
+.press { transition: transform .1s ease, background-color .15s ease, box-shadow .15s ease; }
+.press:active { transform: scale(.96); }
+
+.underline-grow { position: relative; }
+.underline-grow::after { content: ''; position: absolute; left: 0; right: 0; bottom: -2px; height: 2px; background: currentColor; transform: scaleX(0); transform-origin: left; transition: transform .2s ease; }
+.underline-grow:hover::after, .underline-grow[aria-current]::after { transform: scaleX(1); }
+
+html.rm .reveal { opacity: 1; animation: none !important; }
+html.rm .float-slow, html.rm .live-dot, html.rm .shimmer { animation: none !important; }
