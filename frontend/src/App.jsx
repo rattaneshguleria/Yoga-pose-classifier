@@ -10,6 +10,7 @@ import Sessions, { SessionDetail } from './pages/Sessions.jsx'
 import ModelInsights from './pages/ModelInsights.jsx'
 import Settings from './pages/Settings.jsx'
 import Landing from './pages/Landing.jsx'
+import Login from './pages/Login.jsx'
 import { useSettings } from './lib/settings.js'
 import { useEffect } from 'react'
 import { loadClassifier } from './lib/analysis.js'
@@ -22,6 +23,7 @@ export default function App() {
   useEffect(() => { loadClassifier() }, [])
   return (
     <Routes>
+      <Route path="login" element={<Login />} />
       <Route path="welcome" element={<Landing />} />
       <Route element={<Shell />}>
         <Route index element={<Dashboard />} />

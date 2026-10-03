@@ -3,7 +3,7 @@ Real inference: MediaPipe Pose + OpenCV. Classification uses the trained MLP if 
 exists, otherwise the rule-based fit. Install requirements.txt or endpoints return 503."""
 import json, tempfile
 from pathlib import Path
-from fastapi import FastAPI, File, HTTPException, UploadFile, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, File, Header, HTTPException, UploadFile, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 
 from . import classifier, store
@@ -12,6 +12,13 @@ from .pose_logic import POSES as POSE_DB, classify_rules, evaluate
 app = FastAPI(title="YOGAVISION API")
 app.add_middleware(CORSMiddleware, allow_origins=["http://localhost:5173"], allow_methods=["*"], allow_headers=["*"])
 store.init()
+
+
+def current_user(authorization: str | None = Header(default=None)):
+    token = store.extract_bearer_token(authorization)
+    if not token:
+        return None
+    return store.get_user_by_token(token)
 
 
 def _cv():
@@ -96,23 +103,71 @@ def poses(): return POSE_DB
 def pose(pose_id: str): return next((p for p in POSE_DB if p["id"] == pose_id), None) or HTTPException(404)
 
 
+@app.post("/api/auth/register")
+def register(payload: dict):
+    username = (payload.get("username") or "").strip()
+    password = payload.get("password") or ""
+    if not username or len(password) < 6:
+        raise HTTPException(400, "Username and password are required (password must be at least 6 characters).")
+    try:
+        user = store.create_user(username, password)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    token = store.create_token(user["id"])
+    return {"token": token, "user": {"id": user["id"], "username": user["username"]}}
+
+
+@app.post("/api/auth/login")
+def login(payload: dict):
+    username = (payload.get("username") or "").strip()
+    password = payload.get("password") or ""
+    user = store.authenticate_user(username, password)
+    if not user:
+        raise HTTPException(401, "Invalid username or password")
+    token = store.create_token(user["id"])
+    return {"token": token, "user": user}
+
+
+@app.get("/api/auth/me")
+def me(authorization: str | None = Header(default=None)):
+    user = current_user(authorization)
+    if not user:
+        raise HTTPException(401, "Not authenticated")
+    return {"id": user["id"], "username": user["username"]}
+
+
+@app.post("/api/auth/logout")
+def logout(authorization: str | None = Header(default=None)):
+    token = store.extract_bearer_token(authorization)
+    if token:
+        store.delete_token(token)
+    return {"ok": True}
+
+
 @app.get("/api/sessions")
-def sessions(): return store.list_sessions()
+def sessions(authorization: str | None = Header(default=None)):
+    user = current_user(authorization)
+    return store.list_sessions(user_id=user["id"] if user else None)
 
 
 @app.get("/api/sessions/{sid}")
-def session(sid: int):
-    s = store.get_session(sid)
+def session(sid: str, authorization: str | None = Header(default=None)):
+    user = current_user(authorization)
+    s = store.get_session(sid, user_id=user["id"] if user else None)
     if not s: raise HTTPException(404, "Session not found")
     return s
 
 
 @app.post("/api/sessions")
-def save_session(payload: dict): return {"id": store.add_session(payload)}
+def save_session(payload: dict, authorization: str | None = Header(default=None)):
+    user = current_user(authorization)
+    return {"id": store.add_session(payload, user_id=user["id"] if user else None)}
 
 
 @app.get("/api/analytics")
-def analytics(days: int = 30): return store.analytics(days)
+def analytics(days: int = 30, authorization: str | None = Header(default=None)):
+    user = current_user(authorization)
+    return store.analytics(days, user_id=user["id"] if user else None)
 
 
 METRICS_PATH = Path(__file__).resolve().parents[1] / "models" / "metrics.json"

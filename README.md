@@ -1,108 +1,120 @@
-# YOGAVISION
+# YogaVision
 
-Computer-vision yoga pose detection and posture analysis. Built for a university
-evaluator demo: real MediaPipe pose landmarks, joint-angle rules, a trainable
-classifier, session analytics and a technical model-insights page.
+Yoga pose detection and posture analysis using MediaPipe landmarks, pose rules, optional
+ML classification, and session analytics. The app includes a React frontend, a FastAPI
+backend, MongoDB persistence, and account-based access to saved analyses.
 
-## Architecture
+## Features
 
+- Live Coach, image analysis, video analysis, pose library, progress dashboard, and model
+  insights.
+- Browser-based pose detection for the main coaching and analysis flows. Camera frames
+  stay on the device in those flows; server analysis endpoints are also available.
+- Register and log in with a username and password. Saved sessions and analytics are
+  associated with the logged-in user.
+- MongoDB stores users, bearer tokens, and analysis sessions. Sample sessions are added
+  when the database has no sessions; they are marked as samples and are not user data.
+- Pose rules are shared from `frontend/src/lib/poses.json` with the Python pose engine.
+
+## Stack
+
+- Frontend: React, Vite, Tailwind CSS, MediaPipe Tasks Vision.
+- Backend: FastAPI, OpenCV, MediaPipe, PyMongo.
+- Database: MongoDB, configured with `MONGODB_URI` and `MONGODB_DATABASE`.
+- ML: rule-based classification by default; an MLP can be trained with `ml/train.py`.
+
+## Requirements
+
+- Python with the packages in `backend/requirements.txt`.
+- Node.js and npm.
+- A reachable MongoDB server, local or hosted. The default is `mongodb://localhost:27017`.
+
+## Configure MongoDB
+
+Set these environment variables before starting the backend. `MONGODB_DATABASE` is
+optional and defaults to `yogavision`.
+
+PowerShell, using a local MongoDB server:
+
+```powershell
+$env:MONGODB_URI = "mongodb://localhost:27017"
+$env:MONGODB_DATABASE = "yogavision"
 ```
-Camera / image / video
-        v
-OpenCV preprocessing (server path) / native decode (browser path)
-        v
-MediaPipe Pose -> 33 landmarks
-        v
-Feature extraction (joint angles, hip-centred + torso-scaled coordinates)
-        v
-Pose classification  <- rule-based fit, or the trained MLP once ml/train.py has run
-        v
-Form / error detection (angle vs. target range per pose)
-        v
-Feedback generation (correction text per rule)
-        v
-Analytics (SQLite: sessions, per-joint time-in-range, aggregates)
-```
 
-Frontend: React + Vite + Tailwind, MediaPipe Tasks (`@mediapipe/tasks-vision`) running
-**in the browser** for Live Coach, Pose Analyzer and Video Analysis — no frames leave
-the device on that path. Backend: FastAPI + OpenCV + MediaPipe for the equivalent
-server-side endpoints and for training.
+For MongoDB Atlas, set `MONGODB_URI` to the connection string from your Atlas deployment.
+Do not commit credentials or a populated `.env` file. `backend/.env.example` shows the
+local defaults; the app reads environment variables and does not load that example file.
 
-The pose rules (angle ranges, corrections, steps, reference skeletons) live in
-**one file**, `frontend/src/lib/poses.json`, read by both the JS and the Python engine
-(`backend/app/pose_logic.py`), so they cannot drift apart.
+## Run Locally
 
-## Run it
+Start the backend in one terminal:
 
-Backend:
-```
+```powershell
 cd backend
-python -m venv .venv && source .venv/bin/activate      # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
+py -m venv .venv
+.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
 uvicorn app.main:app --reload
 ```
-First image/video request downloads the MediaPipe pose model (~6 MB) into `backend/models/`.
 
-Frontend:
-```
+Start the frontend in another terminal:
+
+```powershell
 cd frontend
 npm install
 npm run dev
 ```
-Open the printed localhost URL. `/api` and `/ws` are proxied to the backend (see `vite.config.js`).
 
-Tests:
-```
+Open the localhost URL printed by Vite. The Vite configuration proxies `/api` and `/ws`
+to the backend. The first server-side image or video request may download the MediaPipe
+pose model into `backend/models/`.
+
+## Authentication and Data
+
+The frontend login page is at `/login`. The backend provides:
+
+- `POST /api/auth/register`, `POST /api/auth/login`, `GET /api/auth/me`, and
+  `POST /api/auth/logout`.
+- `GET /api/sessions`, `GET /api/sessions/{id}`, and `POST /api/sessions`.
+- `GET /api/analytics?days=30`.
+
+Authenticated requests use a bearer token. Session IDs are MongoDB ObjectIds represented
+as strings. User sessions are only returned to their owner; unauthenticated session
+listing is limited to public/sample records. Switching the storage backend does not
+automatically copy records from an earlier SQLite database.
+
+## Tests
+
+```powershell
 cd backend
-pip install -r requirements.txt
 pytest
 ```
 
-## Training the pose classifier
+The session-storage test uses `mongomock`, so the test suite does not require a running
+MongoDB server. The app itself does require a reachable MongoDB server at startup.
 
-See **TRAINING.md** for full instructions. Short version:
+## Train the Classifier
+
+See [TRAINING.md](TRAINING.md) for dataset and licensing guidance. Basic command:
+
+```powershell
+cd backend
+python ../ml/train.py --data /path/to/dataset --dataset-name "Yoga-82 (subset)" --licence "dataset licence"
 ```
-cd backend && pip install -r requirements.txt
-python ../ml/train.py --data /path/to/dataset --dataset-name "Yoga-82 (subset)" --licence "..."
-```
-This writes `backend/models/model.json` + `metrics.json` and `frontend/public/model.json`.
-Once `model.json` exists, Live Coach and Pose Analyzer automatically switch from the
-rule-based classifier to the trained model (the UI label changes from "Match" to
-"Confidence"), and Model Insights (`/model`) shows the real evaluation metrics instead
-of its empty state.
 
-## Known limitations (be upfront about these with the evaluator)
+Training writes model and metrics files under `backend/models/` and `frontend/public/`.
+When a trained model is present, the supported frontend flows use it instead of the
+rule-based classifier, and Model Insights displays its evaluation metrics.
 
-- **Reference skeletons** for Pose Comparison exist only for Warrior II, Tree Pose and
-  Mountain Pose; other poses show a "not authored yet" note.
-- **Angle thresholds** are reasonable starting values, not derived from measuring real
-  practitioners. Tune them in `frontend/src/lib/poses.json` (`rules` field); both
-  frontend and backend read that one file.
-- **Classifier**: until you run `ml/train.py`, pose "classification" is a rule-based
-  best fit against the angle tables, not a learned model. This is clearly labelled in
-  the UI ("Match" vs "Confidence") and in Model Insights.
-- **Video analysis** samples ~4 frames/second and caps at 120 seconds by default
-  (`fps_sample`, `max_seconds` params on `/api/analyze/video`).
-- **Left/right mirroring**: the evaluator picks whichever mirrored rule set fits the
-  measured angles better, which works for symmetric framing but can misjudge poses
-  photographed from unusual angles.
-- **Server-side camera streaming** (`/ws/live-analysis` with raw JPEG bytes) is
-  implemented but not the default path; the browser-only path is what Live Coach uses.
-- Nothing in this codebase was run end-to-end in this environment (no Node/browser
-  available); backend Python logic was unit-tested with `pytest`, but you should run
-  both `npm run dev` and `uvicorn` yourself before presenting and fix anything that
-  surfaces.
+## Current Limitations
 
-## Demo script (suggested)
-
-1. **Landing** (`/welcome`) — pitch, then into the app.
-2. **Live Coach** — calibrate, hold Warrior II or Tree Pose, show corrections updating
-   live, save a session.
-3. **Pose Analyzer** — upload a photo, show joint-by-joint breakdown, error reasoning,
-   and Pose Comparison against the reference skeleton.
-4. **Video Analysis** — upload a short practice clip, click an issue marker to jump to
-   it.
-5. **Dashboard / Progress / Sessions** — show the saved session and trend charts.
-6. **Model Insights** — walk the pipeline, then the confusion matrix and metrics if
-   you've trained a model; otherwise explain the rule-based fallback honestly.
+- Without a trained model, classification is a best fit against the authored pose rules.
+- Pose-comparison reference skeletons are authored for Warrior II, Tree Pose, and
+  Mountain Pose.
+- Angle thresholds are initial values and may misjudge unusual camera angles or
+  left/right mirroring.
+- Video analysis samples about four frames per second and defaults to a 120-second cap.
+- Authentication is suitable for a demo, not production as currently implemented:
+  passwords use unsalted SHA-256 hashes, and bearer tokens do not expire. Use a
+  password-hashing algorithm designed for credentials and add token expiration before
+  deploying with real users.

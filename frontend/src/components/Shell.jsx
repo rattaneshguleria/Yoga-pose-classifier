@@ -1,5 +1,6 @@
-import { NavLink, Outlet, useLocation } from 'react-router-dom'
-import { LayoutDashboard, Video, ScanLine, Film, BookOpen, TrendingUp, History, Cpu, Settings, Camera } from 'lucide-react'
+import { NavLink, Outlet, useLocation, Link, useNavigate } from 'react-router-dom'
+import { LayoutDashboard, Video, ScanLine, Film, BookOpen, TrendingUp, History, Cpu, Settings, Camera, LogOut, LogIn } from 'lucide-react'
+import { api, clearAuthState, getAuthState } from '../lib/api.js'
 const NAV = [
   ['/', 'Dashboard', LayoutDashboard], ['/live', 'Live Coach', Video], ['/analyzer', 'Pose Analyzer', ScanLine],
   ['/video', 'Video Analysis', Film], ['/library', 'Pose Library', BookOpen], ['/progress', 'Progress', TrendingUp],
@@ -8,6 +9,13 @@ const NAV = [
 const link = ({ isActive }) => `flex items-center gap-3 px-3 py-2 text-sm border-l-2 transition-all duration-200 ${isActive ? 'border-moss bg-moss-soft font-semibold text-moss-dark translate-x-0' : 'border-transparent text-mute hover:text-ink hover:bg-paper hover:translate-x-1'}`
 export default function Shell() {
   const { pathname } = useLocation()
+  const navigate = useNavigate()
+  const auth = getAuthState()
+  const logout = async () => {
+    try { await api.auth.logout() } catch {}
+    clearAuthState()
+    navigate('/login')
+  }
   return (
     <div className="min-h-screen md:flex">
       <aside className="hidden md:flex md:w-60 shrink-0 flex-col border-r border-line bg-paper sticky top-0 h-screen">
@@ -15,8 +23,16 @@ export default function Shell() {
           <div className="text-xs text-mute">Intelligent Yoga Analysis</div></div>
         <nav className="flex-1" aria-label="Main">{NAV.map(([to, label, Icon]) =>
           <NavLink key={to} to={to} end={to === '/'} className={link}><Icon size={16} />{label}</NavLink>)}</nav>
-        <div className="border-t border-line p-4 text-xs text-mute space-y-1">
+        <div className="border-t border-line p-4 text-xs text-mute space-y-2">
           <div className="text-ink font-medium">Your profile</div>
+          {auth ? (
+            <>
+              <div className="text-ink font-medium">{auth.user.username}</div>
+              <button onClick={logout} className="inline-flex items-center gap-1 text-mute hover:text-ink"><LogOut size={12} />Log out</button>
+            </>
+          ) : (
+            <Link to="/login" className="inline-flex items-center gap-1 text-mute hover:text-ink"><LogIn size={12} />Log in</Link>
+          )}
           <div className="flex items-center gap-2"><Camera size={12} />Camera idle</div>
           <div className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-moss live-dot" />Mock inference</div>
         </div>

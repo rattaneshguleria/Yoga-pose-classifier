@@ -1,6 +1,6 @@
 import { Link, useParams } from 'react-router-dom'
-import { ArrowLeft } from 'lucide-react'
-import { api, useApi } from '../lib/api.js'
+import { ArrowLeft, LogIn } from 'lucide-react'
+import { api, getAuthState, useApi } from '../lib/api.js'
 import BackendDown from '../components/BackendDown.jsx'
 import LoadingState from '../components/LoadingState.jsx'
 import EmptyState from '../components/EmptyState.jsx'
@@ -27,7 +27,23 @@ export function SessionDetail() {
     </div>)
 }
 export default function Sessions() {
-  const { data, error, loading } = useApi(api.sessions)
+  const auth = getAuthState()
+  const { data, error, loading } = useApi(api.sessions, [auth?.token])
+
+  if (!auth) {
+    return (
+      <div className="p-4 md:p-8 max-w-2xl">
+        <h1 className="text-2xl font-semibold tracking-tight">Sessions</h1>
+        <div className="mt-6 rounded border border-line bg-paper p-6 text-sm text-mute">
+          <p className="mb-3">Log in to view and manage your saved analysis history.</p>
+          <Link to="/login" className="inline-flex items-center gap-2 rounded bg-moss px-4 py-2 font-medium text-white hover:bg-moss-dark">
+            <LogIn size={16} />Log in
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="p-4 md:p-8 max-w-5xl">
       <h1 className="text-2xl font-semibold tracking-tight">Sessions</h1>

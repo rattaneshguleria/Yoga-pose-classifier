@@ -51,3 +51,31 @@ def test_mlp_forward_is_a_distribution():
     m = {"classes": ["a", "b"], "mean": [0] * 33, "std": [1] * 33,
          "layers": [{"W": np.random.randn(4, 33).tolist(), "b": [0] * 4}, {"W": np.random.randn(2, 4).tolist(), "b": [0, 0]}]}
     p = classifier.forward(m, features.extract(skeleton())); assert abs(p.sum() - 1) < 1e-9
+
+
+def test_user_session_storage_roundtrip():
+    import mongomock
+    from app import store
+
+    store.init(mongomock.MongoClient())
+
+    user = store.create_user('demo-user', 'secret123')
+    assert user['username'] == 'demo-user'
+    token = store.create_token(user['id'])
+
+    session_id = store.add_session({
+        'duration': 120,
+        'avg_accuracy': 0.91,
+        'joints': {'left_knee': 0.92},
+        'metrics': {'confidence': 0.93},
+        'poses': [{'name': 'Tree Pose', 'seconds': 120, 'accuracy': 0.91, 'confidence': 0.93}],
+    }, user_id=user['id'])
+
+    assert session_id is not None
+    assert store.list_sessions(user_id=user['id'])
+    assert not store.list_sessions(user_id='000000000000000000000000')
+    assert store.get_user_by_token(token)['username'] == 'demo-user'
+    saved = store.get_session(session_id, user_id=user['id'])
+    assert saved['poses'][0]['name'] == 'Tree Pose'
+    assert store.get_session(session_id, user_id='000000000000000000000000') is None
+    assert store.analytics(30, user_id=user['id'])['series']

@@ -9,7 +9,7 @@ export const STAGES = [
   ['Pose classification', 'Today the pose is the best fit of measured angles against each pose\u2019s rule ranges. After training, an MLP on landmark features replaces this and reports a real confidence.', 'Rule-based until trained'],
   ['Form / error detection', 'Each angle is compared with the target range for the pose. Deviations become errors with a severity: within 20\u00b0 is a warning, beyond that is incorrect.', 'Working'],
   ['Feedback generation', 'Every rule carries a correction message for too-small and too-large angles, so the text on screen comes directly from the measurement.', 'Working'],
-  ['Analytics', 'Saved sessions store per-pose accuracy and per-joint time in range in SQLite. Progress and the dashboard aggregate them.', 'Working'],
+  ['Analytics', 'Saved sessions store per-pose accuracy and per-joint time in range in MongoDB. Progress and the dashboard aggregate them.', 'Working'],
 ]
 export default function Pipeline() {
   const [i, setI] = useState(0), [name, text, status] = STAGES[i]
