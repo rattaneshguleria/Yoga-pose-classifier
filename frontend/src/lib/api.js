@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react'
 
 const AUTH_KEY = 'yogavision-auth'
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/+$/, '')
+export const apiUrl = path => `${API_BASE_URL}${path}`
+
 export function getAuthState() {
   try {
     const raw = localStorage.getItem(AUTH_KEY)
@@ -20,7 +23,7 @@ const request = async (url, options = {}) => {
   const auth = getAuthState()
   const headers = new Headers(options.headers || {})
   if (auth?.token) headers.set('Authorization', `Bearer ${auth.token}`)
-  const r = await fetch(url, { ...options, headers })
+  const r = await fetch(apiUrl(url), { ...options, headers })
   if (!r.ok) {
     let message = r.statusText || 'Request failed'
     try {
@@ -72,7 +75,7 @@ export function useApi(fn, deps = []) {
 // Trained-model classification on the backend (only landmarks are sent, never video). null => use the browser rule-based fit.
 export async function classifyRemote(landmarks, aspect) {
   try {
-    const r = await fetch('/api/classify/pose', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ landmarks, aspect }) })
+    const r = await fetch(apiUrl('/api/classify/pose'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ landmarks, aspect }) })
     if (!r.ok) return null
     const d = await r.json()
     return d.source === 'model' ? { pose: d.pose, confidence: d.confidence, model: true } : null

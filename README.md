@@ -39,6 +39,7 @@ PowerShell, using a local MongoDB server:
 ```powershell
 $env:MONGODB_URI = "mongodb://localhost:27017"
 $env:MONGODB_DATABASE = "yogavision"
+$env:CORS_ORIGINS = "http://localhost:5173"
 ```
 
 For MongoDB Atlas, set `MONGODB_URI` to the connection string from your Atlas deployment.
@@ -46,6 +47,11 @@ Do not commit credentials or a populated `.env` file. The backend automatically 
 `backend/.env` when it starts; environment variables already set by the deployment
 environment take precedence. `backend/.env.example` is a template and is not loaded
 automatically.
+
+For deployment, set `CORS_ORIGINS` on the backend to the exact frontend origin, for
+example `https://your-frontend.example.com`. Multiple origins can be comma-separated.
+The production frontend uses `VITE_API_BASE_URL` to target the backend; the provided
+`frontend/.env.production` points to the current Render API.
 
 ## Run Locally
 

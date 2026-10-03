@@ -1,7 +1,7 @@
 """YOGAVISION API. Run: uvicorn app.main:app --reload
 Real inference: MediaPipe Pose + OpenCV. Classification uses the trained MLP if models/model.json
 exists, otherwise the rule-based fit. Install requirements.txt or endpoints return 503."""
-import json, tempfile
+import json, os, tempfile
 from pathlib import Path
 from fastapi import FastAPI, File, Header, HTTPException, UploadFile, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
@@ -10,7 +10,8 @@ from . import classifier, store
 from .pose_logic import POSES as POSE_DB, classify_rules, evaluate
 
 app = FastAPI(title="YOGAVISION API")
-app.add_middleware(CORSMiddleware, allow_origins=["http://localhost:5173"], allow_methods=["*"], allow_headers=["*"])
+cors_origins = [origin.strip().rstrip("/") for origin in os.getenv("CORS_ORIGINS", "http://localhost:5173").split(",") if origin.strip()]
+app.add_middleware(CORSMiddleware, allow_origins=cors_origins, allow_methods=["*"], allow_headers=["*"])
 store.init()
 
 

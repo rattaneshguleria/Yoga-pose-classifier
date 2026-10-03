@@ -1,10 +1,10 @@
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts'
-import { useApi } from '../lib/api.js'
+import { apiUrl, useApi } from '../lib/api.js'
 import ConfusionMatrix from '../components/ConfusionMatrix.jsx'
 import Pipeline from '../components/Pipeline.jsx'
 import LoadingState from '../components/LoadingState.jsx'
 import EmptyState from '../components/EmptyState.jsx'
-const get = async () => { const r = await fetch('/api/model/metrics'); if (r.status === 404) return { untrained: true }; if (!r.ok) throw new Error(r.status); return r.json() }
+const get = async () => { const r = await fetch(apiUrl('/api/model/metrics')); if (r.status === 404) return { untrained: true }; if (!r.ok) throw new Error(r.status); return r.json() }
 const f = v => v == null ? '–' : v.toFixed(3), ax = { tick: { fontSize: 10, fill: '#6B7177' }, tickLine: false, axisLine: { stroke: '#DCDCD5' } }
 const H = ({ children }) => <h2 className="mt-10 mb-2 text-xs font-mono uppercase tracking-wide text-mute border-b border-ink pb-1">{children}</h2>
 
