@@ -3,7 +3,7 @@ import { Play, Square, FlipHorizontal, Camera, Check, AlertTriangle, ShieldCheck
 import PoseSkeleton, { BONES } from '../components/PoseSkeleton.jsx'
 import CalibrationPanel, { calibrationChecks } from '../components/CalibrationPanel.jsx'
 import { startDetection } from '../lib/poseEngine.js'
-import { classify, evaluate, RULES } from '../lib/analysis.js'
+import { classify, evaluate, RULES, poseLabel } from '../lib/analysis.js'
 import { useSearchParams } from 'react-router-dom'
 import { api, classifyRemote } from '../lib/api.js'
 import { getSettings } from '../lib/settings.js'
@@ -35,16 +35,22 @@ export default function LiveCoach() {
     setLms(l)
     if (!l || (p !== 'active' && p !== 'calibrating')) { setFrame(f => f && { ...f, lms: l }); return }
     if (now - lastRemote.current > 500) { lastRemote.current = now; classifyRemote(l, aspectRef.current).then(r => { remote.current = r }) }
-    const cls = remote.current || classify(l, aspectRef.current), pose = targetRef.current === 'auto' ? cls.pose : targetRef.current
+    const cls = remote.current || classify(l, aspectRef.current)
+    const coachPose = targetRef.current === 'auto' ? (cls.coachPose || (RULES[cls.pose] ? cls.pose : null)) : targetRef.current
+    const pose = coachPose || cls.pose
     const ev = evaluate(pose, l, aspectRef.current)
-    setFrame({ lms: l, pose, confidence: cls.confidence, source: cls.source, ...ev })
+    setFrame({ lms: l, pose, detectedPose: cls.pose, coachPose, confidence: cls.confidence, source: cls.source, ...ev })
     if (p === 'active') {
       const st = stats.current, pn = (st.poses[pose] ||= { sec: 0, score: 0, conf: 0 })
-      pn.sec += dt; pn.score += ev.form_score * dt; pn.conf += cls.confidence * dt; st.total += dt; st.scores.push(ev.form_score)
-      for (const j of Object.keys(ev.joint_angles)) { const jj = (st.joints[j] ||= { t: 0, bad: 0 }); jj.t += dt; if (ev.errors.some(e => e.joint === j)) jj.bad += dt }
+      pn.sec += dt; pn.conf += cls.confidence * dt; st.total += dt
       const t = tick.current; t.session += dt
-      if (ev.form_score >= HOLD_MIN_SCORE) { t.hold += dt; if (t.hold >= HOLD_COUNTS_AT && !t.counted) { t.counted = true; t.count++ } }
-      else { t.hold = 0; t.counted = false }
+      if (ev.form_score == null) { t.hold = 0; t.counted = false }
+      else {
+        pn.score += ev.form_score * dt; pn.scoredSec = (pn.scoredSec || 0) + dt; st.scores.push(ev.form_score)
+        for (const j of Object.keys(ev.joint_angles)) { const jj = (st.joints[j] ||= { t: 0, bad: 0 }); jj.t += dt; if (ev.errors.some(e => e.joint === j)) jj.bad += dt }
+        if (ev.form_score >= HOLD_MIN_SCORE) { t.hold += dt; if (t.hold >= HOLD_COUNTS_AT && !t.counted) { t.counted = true; t.count++ } }
+        else { t.hold = 0; t.counted = false }
+      }
       setTimer({ session: t.session, hold: t.hold, count: t.count })
     }
   }, [])
@@ -84,10 +90,12 @@ export default function LiveCoach() {
   function finish() {
     const st = stats.current
     if (st.total >= 5) {
-      const poses = Object.entries(st.poses).filter(([, v]) => v.sec >= 2).map(([name, v]) => ({ name, seconds: Math.round(v.sec), accuracy: +(v.score / v.sec).toFixed(2), confidence: +(v.conf / v.sec).toFixed(2) }))
-      const mean = st.scores.reduce((a, b) => a + b, 0) / st.scores.length, sd = Math.sqrt(st.scores.reduce((a, b) => a + (b - mean) ** 2, 0) / st.scores.length)
-      setSummary({ duration: Math.round(st.total), avg_accuracy: +mean.toFixed(2), poses, joints: Object.fromEntries(Object.entries(st.joints).map(([j, v]) => [j, +(1 - v.bad / v.t).toFixed(2)])),
-        metrics: { alignment: +mean.toFixed(2), stability: +Math.max(0, 1 - sd).toFixed(2), confidence: +(poses.reduce((a, p) => a + p.confidence, 0) / (poses.length || 1)).toFixed(2) } })
+      const poses = Object.entries(st.poses).filter(([, v]) => v.sec >= 2).map(([name, v]) => ({ name, seconds: Math.round(v.sec), accuracy: v.scoredSec ? +(v.score / v.scoredSec).toFixed(2) : null, confidence: +(v.conf / v.sec).toFixed(2) }))
+      const mean = st.scores.length ? st.scores.reduce((a, b) => a + b, 0) / st.scores.length : null
+      const sd = mean == null ? 0 : Math.sqrt(st.scores.reduce((a, b) => a + (b - mean) ** 2, 0) / st.scores.length)
+      setSummary({ duration: Math.round(st.total), avg_accuracy: mean == null ? null : +mean.toFixed(2), recognition_only: mean == null, poses,
+        joints: Object.fromEntries(Object.entries(st.joints).map(([j, v]) => [j, +(1 - v.bad / v.t).toFixed(2)])),
+        metrics: { alignment: mean == null ? null : +mean.toFixed(2), stability: mean == null ? null : +Math.max(0, 1 - sd).toFixed(2), confidence: +(poses.reduce((a, p) => a + p.confidence, 0) / (poses.length || 1)).toFixed(2) } })
     }
     stop()
   }
@@ -119,7 +127,7 @@ export default function LiveCoach() {
           {live && <div className="absolute inset-0" style={flip}><PoseSkeleton landmarks={skel} flagged={flagged} /></div>}
           {!live && <div className="absolute inset-0 grid place-items-center text-center text-bone/80 p-6" role={phase === 'denied' || phase === 'modelError' ? 'alert' : undefined}><p className="max-w-sm">{msg}</p></div>}
           {phase === 'active' && frame && <div className="absolute left-3 top-3 bg-ink/80 text-bone px-3 py-2 pop-in">
-            <div className="font-semibold flex items-center gap-2"><span className="h-1.5 w-1.5 rounded-full bg-moss live-dot" />{frame.pose}</div><div className="text-xs">{frame.source === 'model' ? 'Confidence' : 'Match'} {Math.round(frame.confidence * 100)}%</div></div>}
+            <div className="font-semibold flex items-center gap-2"><span className="h-1.5 w-1.5 rounded-full bg-moss live-dot" />{poseLabel(frame.pose)}</div><div className="text-xs">{frame.source === 'model' ? 'Confidence' : 'Match'} {Math.round(frame.confidence * 100)}%</div></div>}
           {phase === 'paused' && <div className="absolute inset-0 grid place-items-center bg-ink/60 text-bone font-semibold">Paused</div>}
         </div>
         <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -137,9 +145,14 @@ export default function LiveCoach() {
 
       <aside className="border-t lg:border-t-0 lg:border-l border-line bg-paper p-5" aria-live="polite">
         {phase === 'calibrating' ? <CalibrationPanel checks={calibrationChecks({ cameraOn: true, lms, brightness })} onBegin={begin} />
-        : !frame || !(phase === 'active' || phase === 'paused') ? summary ? <div><h2 className="font-semibold">Session complete</h2><p className="mt-1 text-sm text-mute">{fmt(summary.duration)} · accuracy {Math.round(summary.avg_accuracy * 100)}% · {summary.poses.length} pose{summary.poses.length === 1 ? '' : 's'}</p>
+        : !frame || !(phase === 'active' || phase === 'paused') ? summary ? summary.recognition_only ? <div><h2 className="font-semibold">Session complete</h2><p className="mt-1 text-sm text-mute">{fmt(summary.duration)} · {summary.poses.length} recognized poses · no form score available</p>
+          <div className="mt-4"><button onClick={() => setSummary(null)} className="press border border-line px-4 py-2 text-sm hover:bg-paper">Close</button></div></div>
+          : <div><h2 className="font-semibold">Session complete</h2><p className="mt-1 text-sm text-mute">{fmt(summary.duration)} · accuracy {Math.round(summary.avg_accuracy * 100)}% · {summary.poses.length} pose{summary.poses.length === 1 ? '' : 's'}</p>
           <div className="mt-4 flex gap-2"><button onClick={save} className="press bg-moss text-white px-4 py-2 text-sm font-semibold hover:bg-moss-dark hover:-translate-y-0.5 transition-all">Save session</button><button onClick={() => setSummary(null)} className="press border border-line px-4 py-2 text-sm hover:bg-paper">Discard</button></div></div>
           : <p className="text-sm text-mute">Start the camera, then complete calibration to begin.</p> : <>
+          {frame.recognition_only ? <div><div className="text-xs text-mute">Detected pose</div><div className="mt-1 text-xl font-semibold">{poseLabel(frame.detectedPose)}</div>
+            <span className="mt-3 inline-block bg-bone px-2 py-1 text-sm font-medium">Recognition only</span>
+            <div className="mt-3 text-sm text-mute">Confidence {Math.round(frame.confidence * 100)}%</div></div> : <>
           <div className="flex items-end justify-between"><div><div className="text-xs text-mute">Form score</div>
             <div className={`text-5xl font-semibold transition-transform ${frame.form_score >= .85 ? 'text-moss-dark' : ''}`}>{Math.round(frame.form_score * 100)}<span className="text-2xl text-mute">%</span></div></div>
             <div className="text-right text-sm"><div className="text-mute text-xs">Hold</div><span className="text-2xl font-semibold">{fmt(timer.hold)}</span></div></div>
@@ -158,6 +171,7 @@ export default function LiveCoach() {
           <h2 className="mt-6 text-sm font-semibold">Corrections</h2>
           {frame.corrections.length ? <ul className="mt-2 space-y-2 text-sm">{frame.corrections.map((c, i) => <li key={c} className="border-l-2 border-amber pl-3 reveal in" style={{ animationDelay: `${i * 60}ms` }}>{c}</li>)}</ul>
             : <p className="mt-2 text-sm text-moss-dark">Form looks good. Hold steady.</p>}
+          </>}
         </>}
       </aside>
       <Toast msg={toast} onDone={() => setToast('')} />

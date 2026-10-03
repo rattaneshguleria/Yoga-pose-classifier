@@ -78,6 +78,6 @@ export async function classifyRemote(landmarks, aspect) {
     const r = await fetch(apiUrl('/api/classify/pose'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ landmarks, aspect }) })
     if (!r.ok) return null
     const d = await r.json()
-    return d.source === 'model' ? { pose: d.pose, confidence: d.confidence, model: true } : null
+    return { pose: d.pose, coachPose: d.coach_pose || null, confidence: d.confidence, source: d.source }
   } catch { return null }
 }

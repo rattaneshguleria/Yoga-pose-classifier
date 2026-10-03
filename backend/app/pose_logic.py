@@ -68,7 +68,9 @@ def classify_rules(lms, aspect=1.0):
 
 def evaluate(pose, lms, aspect=1.0):
     P = pts(lms, aspect); ang = joint_angles(P)
-    rules = _orient(pose, ang) if pose in POSE_RULES else {}
+    if pose not in POSE_RULES:
+        return {"joint_angles": ang, "errors": [], "corrections": [], "form_score": None, "recognition_only": True}
+    rules = _orient(pose, ang)
     errors, corrections = [], []
     for j, (lo, hi, low, high) in rules.items():
         d = _dev(ang[j], lo, hi)
@@ -86,4 +88,4 @@ def evaluate(pose, lms, aspect=1.0):
         corrections.append("Level your shoulders.")
     penalty = sum(1.0 if e["severity"] == "incorrect" else 0.5 for e in errors)
     return {"joint_angles": ang, "errors": errors, "corrections": corrections,
-            "form_score": round(max(0.0, 1 - penalty / (len(rules) + 2)), 2)}
+            "form_score": round(max(0.0, 1 - penalty / (len(rules) + 2)), 2), "recognition_only": False}

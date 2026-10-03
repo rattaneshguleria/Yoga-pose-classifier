@@ -36,6 +36,14 @@ def test_leaning_torso_flagged():
     assert any(e["joint"] == "spine" for e in r["errors"])
 
 
+def test_undefined_pose_is_recognition_only():
+    result = evaluate("Akarna_Dhanurasana", skeleton())
+    assert result["recognition_only"] is True
+    assert result["form_score"] is None
+    assert result["errors"] == []
+    assert result["corrections"] == []
+
+
 def test_rule_classifier_returns_known_pose():
     pose, conf = classify_rules(skeleton())
     assert pose == "Mountain Pose" and 0 <= conf <= 1

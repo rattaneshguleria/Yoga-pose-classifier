@@ -60,6 +60,40 @@ If you'd rather use a different dataset, get it into the same
 `data/<Pose Name>/*.jpg` layout by hand, with folder names matching entries in
 `frontend/src/lib/poses.json`, then skip straight to step 2 above.
 
+## Train Yoga-82 plus Kaggle samples (78 classes)
+
+The project's public Drive folder includes `_reports/dataset_index.csv` and
+`_reports/label_map.json`. Use the manifest-based trainer to download only indexed
+images and retain the official train/validation/test assignments. Unlisted or dropped
+JPGs are excluded, and validation/test examples are not used to fit the model.
+
+```powershell
+cd backend
+python -m pip install -r requirements.txt
+cd ..
+python ml/train_yoga82.py --archive "$env:USERPROFILE\Downloads\yoga82_data-20261003T174513Z-1-001.zip"
+```
+
+The script extracts only manifest-listed Yoga-82 images and caches their MediaPipe
+features under `data/yoga82/`. It also appends images from the five prepared Kaggle
+folders as **training-only** samples: Downward Dog, Plank, Tree Pose, and Warrior II
+augment matching Yoga-82 labels; Goddess Pose is added as class 78. Mountain Pose is
+not sourced or overwritten by this step. Official Yoga-82 validation/test assignments
+remain unchanged, and Kaggle images are never added to those splits.
+
+All caches are under `data/`, which is git-ignored. The model and metrics are written
+to `backend/models/` and `frontend/public/`. Test accuracy is calculated on the
+official Yoga-82 test split; Goddess has no official test examples, so its per-class
+test accuracy is shown as unavailable. MediaPipe skip counts include both sources.
+The complete per-class report is `backend/models/yoga82_per_class_report.csv`.
+
+The existing `data/<pose>/` directories and nine authored pose definitions remain
+untouched. Only labels with an exact configured alias to an existing definition get
+form coaching; other predictions are recognition-only.
+
+Yoga-82's terms restrict use to non-commercial research and education, and source image
+rights vary. Review those rights before public or commercial distribution.
+
 ## What training produces
 
 - `backend/models/model.json` — weights the FastAPI backend loads at runtime

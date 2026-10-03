@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Upload, Check, AlertTriangle } from 'lucide-react'
 import { detectImage } from '../lib/poseEngine.js'
 import PoseComparison from '../components/PoseComparison.jsx'
-import { classify, evaluate, RULES, POSES } from '../lib/analysis.js'
+import { classify, evaluate, RULES, POSES, poseLabel } from '../lib/analysis.js'
 import { BONES } from '../components/PoseSkeleton.jsx'
 import BodyDiagram from '../components/BodyDiagram.jsx'
 import ErrorIndicator from '../components/ErrorIndicator.jsx'
@@ -34,8 +34,9 @@ export default function PoseAnalyzer() {
   }
   const result = useMemo(() => {
     if (!lms) return null
-    const c = classify(lms, aspect), pose = target === 'auto' ? c.pose : target
-    return { pose, confidence: c.confidence, source: c.source, ...evaluate(pose, lms, aspect) }
+    const c = classify(lms, aspect), coachPose = target === 'auto' ? (c.coachPose || (RULES[c.pose] ? c.pose : null)) : target
+    const pose = coachPose || c.pose
+    return { pose, detectedPose: c.pose, confidence: c.confidence, source: c.source, ...evaluate(pose, lms, aspect) }
   }, [lms, aspect, target])
 
   useEffect(() => { // draw analysed image
@@ -69,16 +70,23 @@ export default function PoseAnalyzer() {
       {src && !busy && lms === null && <p className="mt-6 text-sm border-l-2 border-amber pl-3">No person was detected. Use a photo where the whole body is visible and well lit.</p>}
       {result && !busy && <div className="mt-8 grid lg:grid-cols-[260px_1fr] gap-8">
         <div>
+          {result.recognition_only ? <>
+            <div className="text-xs text-mute">Detected pose</div>
+            <h2 className="mt-1 text-xl font-semibold">{poseLabel(result.detectedPose)}</h2>
+            <span className="mt-3 inline-block bg-paper px-2 py-1 text-sm font-medium">Recognition only</span>
+            <dl className="mt-5 text-sm"><div className="flex justify-between"><dt className="text-mute">Classifier confidence</dt><dd className="font-medium">{Math.round(result.confidence * 100)}%</dd></div></dl>
+          </> : <>
           <div className="text-xs text-mute">Form score</div>
           <div className="text-6xl font-semibold"><AnimatedNumber value={Math.round(result.form_score * 100)} /><span className="text-2xl text-mute">%</span></div>
           <span className={`mt-2 inline-block px-2 py-0.5 text-sm font-medium ${TONE[tone]}`}>{word}</span>
           <dl className="mt-5 text-sm space-y-2"><div className="flex justify-between"><dt className="text-mute">Detected pose</dt><dd className="font-medium">{result.pose}</dd></div>
             <div className="flex justify-between"><dt className="text-mute">{result.source === 'model' ? 'Classifier confidence' : 'Match to pose rules'}</dt><dd className="font-medium">{Math.round(result.confidence * 100)}%</dd></div></dl>
+          <div className="mt-6"><BodyDiagram errors={result.errors} active={active} onActive={setActive} /></div>
+          </>}
           <label className="mt-5 block text-sm text-mute">Judge against{' '}<select value={target} onChange={e => setTarget(e.target.value)} className="border border-line bg-paper text-ink px-2 py-1.5">
             <option value="auto">Best match</option>{Object.keys(RULES).map(p => <option key={p}>{p}</option>)}</select></label>
-          <div className="mt-6"><BodyDiagram errors={result.errors} active={active} onActive={setActive} /></div>
         </div>
-        <div>
+        {!result.recognition_only && <div>
           <h2 className="font-semibold">Joint-by-joint</h2>
           <table className="mt-2 w-full text-sm"><tbody className="divide-y divide-line">
             {Object.entries(result.joint_angles).map(([j, v]) => { const e = result.errors.find(x => x.joint === j), s = e ? e.severity : 'ok'
@@ -90,8 +98,8 @@ export default function PoseAnalyzer() {
           {result.errors.length ? <ul className="mt-2 space-y-2">{result.errors.map((e, i) =>
             <Reveal as="li" key={e.joint} className="list-none"><ErrorIndicator error={e} correction={result.corrections[i]} active={active} onActive={setActive} /></Reveal>)}</ul>
             : <p className="mt-2 text-sm text-moss-dark">No alignment problems found against the {result.pose} rules.</p>}
-        </div></div>}
-      {result && !busy && (() => { const ref = POSES.find(p => p.name === result.pose)?.ref
+        </div>}</div>}
+      {result && !result.recognition_only && !busy && (() => { const ref = POSES.find(p => p.name === result.pose)?.ref
         return <section className="mt-10"><h2 className="font-semibold mb-3">Compare with reference</h2>{ref ? <PoseComparison user={lms} aspect={aspect} refPts={ref} /> : <p className="text-sm text-mute">No reference skeleton exists yet for {result.pose}.</p>}</section> })()}
     </div>
   )

@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import { Film } from 'lucide-react'
 import { createVideoLandmarker } from '../lib/poseEngine.js'
-import { classify, evaluate } from '../lib/analysis.js'
+import { classify, evaluate, RULES, poseLabel } from '../lib/analysis.js'
 import VideoTimeline from '../components/VideoTimeline.jsx'
 import LoadingState from '../components/LoadingState.jsx'
 import EmptyState from '../components/EmptyState.jsx'
@@ -28,15 +28,19 @@ export default function VideoAnalysis() {
         if (cancel.current) { setProgress(null); return }
         await seek(v, t)
         const l = model.detectForVideo(v, i * 250 + 1).landmarks[0]
-        if (l) { const c = classify(l, asp); frames.push({ t, pose: c.pose, ...evaluate(c.pose, l, asp) }) }
+        if (l) {
+          const c = classify(l, asp), coachPose = c.coachPose || (RULES[c.pose] ? c.pose : null), pose = coachPose || c.pose
+          frames.push({ t, pose, detectedPose: c.pose, confidence: c.confidence, ...evaluate(pose, l, asp) })
+        }
         setProgress(t / dur)
       }
       if (!frames.length) { setProgress(null); return setErr('No person was detected in this video.') }
       const segments = []; frames.forEach(f => { const s = segments[segments.length - 1]
         if (s && s.pose === f.pose && f.t - s.end <= STEP * 2) s.end = f.t + STEP; else segments.push({ pose: f.pose, start: f.t, end: f.t + STEP }) })
-      const issues = []; frames.forEach(f => f.errors.forEach(e => { if (e.severity !== 'incorrect' && f.form_score >= .7) return
+      const scoredFrames = frames.filter(f => f.form_score != null)
+      const issues = []; scoredFrames.forEach(f => f.errors.forEach(e => { if (e.severity !== 'incorrect' && f.form_score >= .7) return
         if (!issues.some(x => x.joint === e.joint && f.t - x.t < 2)) issues.push({ t: f.t, joint: e.joint, severity: e.severity, error: e }) }))
-      setRes({ dur, segments: segments.filter(s => s.end - s.start >= .5), issues, score: frames.reduce((a, f) => a + f.form_score, 0) / frames.length })
+      setRes({ dur, segments: segments.filter(s => s.end - s.start >= .5), issues, score: scoredFrames.length ? scoredFrames.reduce((a, f) => a + f.form_score, 0) / scoredFrames.length : null })
     } catch { setErr('This video could not be analysed. Try MP4 (H.264) and check your connection for the first model load.') }
     setProgress(null)
   }
@@ -58,17 +62,18 @@ export default function VideoAnalysis() {
           {res && <div className="mt-4"><VideoTimeline duration={res.dur} segments={res.segments} issues={res.issues} current={now} onSeek={jump} /></div>}
         </div>
         {res && <aside>
-          <div className="text-xs text-mute">Overall session score</div>
-          <div className="text-6xl font-semibold"><AnimatedNumber value={Math.round(res.score * 100)} /><span className="text-2xl text-mute">%</span></div>
+          <div className="text-xs text-mute">{res.score == null ? 'Recognition only' : 'Form score for supported poses'}</div>
+          {res.score == null ? <p className="mt-2 text-sm text-mute">Detected poses have no matching coaching rules.</p> : <div className="text-6xl font-semibold"><AnimatedNumber value={Math.round(res.score * 100)} /><span className="text-2xl text-mute">%</span></div>}
           <h2 className="mt-6 font-semibold text-sm">Detected poses</h2>
-          <ul className="mt-1 text-sm">{poses.map(p => <li key={p}>{p}</li>)}</ul>
-          <h2 className="mt-6 font-semibold text-sm">Issues ({res.issues.length})</h2>
-          {res.issues.length === 0 ? <p className="mt-1 text-sm text-moss-dark">No alignment issues found.</p> :
+          <ul className="mt-1 text-sm">{poses.map(p => <li key={p}>{poseLabel(p)}</li>)}</ul>
+          {res.score != null && <><h2 className="mt-6 font-semibold text-sm">Issues ({res.issues.length})</h2>
+          {res.issues.length === 0 ? <p className="mt-1 text-sm text-moss-dark">No alignment issues found in supported poses.</p> :
             <ul className="mt-1 divide-y divide-line max-h-80 overflow-auto">{res.issues.map((x, i) =>
               <li key={i}><button onClick={() => jump(x.t)} className="w-full text-left py-2 hover:bg-paper transition-colors px-1">
                 <span className="text-sm font-medium">{fmtTime(x.t)} · {label(x.joint)}</span>
                 <span className={`ml-2 px-1.5 text-xs ${TONE[x.severity]}`}>{x.severity === 'incorrect' ? 'Incorrect' : 'Adjust'}</span>
                 <span className="block text-xs text-mute">{why(x.error)}</span></button></li>)}</ul>}
+          </>}
         </aside>}
       </div>}
     </div>

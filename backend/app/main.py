@@ -44,10 +44,23 @@ def classify_pose(lms, aspect=1.0):
     return classifier.predict(lms, aspect) or classify_rules(lms, aspect)
 
 
+def coaching_pose(pose):
+    known = {item["name"] for item in POSE_DB}
+    if pose in known:
+        return pose
+    model = classifier.load() or {}
+    mapped = model.get("coaching_labels", {}).get(pose)
+    return mapped if mapped in known else None
+
+
 def analyse(lms, aspect, target=None):
     pose, conf = classify_pose(lms, aspect)
-    return {"pose": target or pose, "confidence": conf, "landmarks": lms,
-            "classifier": "model" if classifier.load() else "rules", **evaluate(target or pose, lms, aspect)}
+    known = {item["name"] for item in POSE_DB}
+    coach_pose = target if target in known else coaching_pose(pose) if target is None else None
+    return {"pose": target or pose, "detected_pose": pose, "coach_pose": coach_pose,
+            "confidence": conf, "landmarks": lms,
+            "classifier": "model" if classifier.load() else "rules",
+            **evaluate(coach_pose or pose, lms, aspect)}
 
 
 @app.post("/api/analyze/image")
@@ -81,14 +94,17 @@ async def analyze_video(file: UploadFile = File(...), fps_sample: float = 4.0, m
         if s and s["pose"] == f["pose"]: s["end"] = f["t"]
         else: segments.append({"pose": f["pose"], "start": f["t"], "end": f["t"]})
     issues = [{"t": f["t"], "joint": e["joint"], "severity": e["severity"]} for f in frames for e in f["errors"] if e["severity"] == "incorrect"]
+    scored = [frame["form_score"] for frame in frames if frame["form_score"] is not None]
     return {"frames": frames, "segments": segments, "issues": issues,
-            "overall_score": round(sum(f["form_score"] for f in frames) / len(frames), 2)}
+            "overall_score": round(sum(scored) / len(scored), 2) if scored else None,
+            "recognition_only": not scored}
 
 
 @app.post("/api/classify/pose")
 async def classify(payload: dict):
     pose, conf = classify_pose(payload["landmarks"], payload.get("aspect", 1.0))
-    return {"pose": pose, "confidence": conf}
+    return {"pose": pose, "coach_pose": coaching_pose(pose), "confidence": conf,
+            "source": "model" if classifier.load() else "rules"}
 
 
 @app.post("/api/analyze/posture")

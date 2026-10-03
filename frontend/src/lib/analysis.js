@@ -4,6 +4,7 @@ const JOINTS = { left_elbow: [11,13,15], right_elbow: [12,14,16], left_knee: [23
 import poses from './poses.json'
 export const POSES = poses
 export const RULES = Object.fromEntries(poses.map(p => [p.name, p.rules]))
+export const poseLabel = name => String(name || '').replace(/_/g, ' ').replace(/\s+/g, ' ').trim()
 const swapLR = r => Object.fromEntries(Object.entries(r).map(([j, v]) => [j.startsWith('left') ? j.replace('left','right') : j.replace('right','left'), v]))
 
 const pt = (l, i, a) => [l[i].x * a, l[i].y]
@@ -29,13 +30,17 @@ const orient = (pose, ang) => { const r = RULES[pose]; if (!r) return {}; const 
 
 // Stand-in for the trained classifier: which known pose best fits the measured angles.
 export function classify(l, a) {
-  if (MODEL) return { ...predict(extractFeatures(l, a)), source: 'model' }
+  if (MODEL) {
+    const prediction = predict(extractFeatures(l, a))
+    return { ...prediction, coachPose: MODEL.coaching_labels?.[prediction.pose] || (RULES[prediction.pose] ? prediction.pose : null), source: 'model' }
+  }
   const ang = jointAngles(l, a)
   const ranked = Object.keys(RULES).map(p => [p, fit(orient(p, ang), ang)]).sort((x, y) => y[1] - x[1])
-  return { pose: ranked[0][0], confidence: ranked[0][1], source: 'rules' }
+  return { pose: ranked[0][0], coachPose: ranked[0][0], confidence: ranked[0][1], source: 'rules' }
 }
 export function evaluate(pose, l, a) {
   const ang = jointAngles(l, a), rules = orient(pose, ang), errors = [], corrections = []
+  if (!RULES[pose]) return { joint_angles: ang, errors, corrections, form_score: null, recognition_only: true }
   for (const [j, [lo, hi, low, high]] of Object.entries(rules)) {
     const d = dev(ang[j], lo, hi); if (!d) continue
     errors.push({ joint: j, detected: ang[j], expected: [lo, hi], severity: d > 20 ? 'incorrect' : 'warning', landmark: JOINTS[j][1] })
@@ -45,7 +50,7 @@ export function evaluate(pose, l, a) {
   if (lean > 12) { errors.push({ joint: 'spine', detected: +lean.toFixed(1), expected: [0,12], severity: 'warning', landmark: 11 }); corrections.push('Keep your torso upright.') }
   if (tilt > 6) { errors.push({ joint: 'shoulders', detected: +tilt.toFixed(1), expected: [0,6], severity: 'warning', landmark: 12 }); corrections.push('Level your shoulders.') }
   const penalty = errors.reduce((s, e) => s + (e.severity === 'incorrect' ? 1 : .5), 0)
-  return { joint_angles: ang, errors, corrections, form_score: Math.max(0, 1 - penalty / (Object.keys(rules).length + 2)) }
+  return { joint_angles: ang, errors, corrections, form_score: Math.max(0, 1 - penalty / (Object.keys(rules).length + 2)), recognition_only: false }
 }
 
 // ---- trained classifier (exported by ml/train.py to /model.json; pure JS forward pass) ----
