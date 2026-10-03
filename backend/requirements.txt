@@ -7,4 +7,5 @@ mediapipe>=0.10
 scikit-learn>=1.4
 pymongo>=4.6
 mongomock>=4.1
+python-dotenv>=1.0
 pytest>=8

@@ -42,8 +42,10 @@ $env:MONGODB_DATABASE = "yogavision"
 ```
 
 For MongoDB Atlas, set `MONGODB_URI` to the connection string from your Atlas deployment.
-Do not commit credentials or a populated `.env` file. `backend/.env.example` shows the
-local defaults; the app reads environment variables and does not load that example file.
+Do not commit credentials or a populated `.env` file. The backend automatically loads
+`backend/.env` when it starts; environment variables already set by the deployment
+environment take precedence. `backend/.env.example` is a template and is not loaded
+automatically.
 
 ## Run Locally
 

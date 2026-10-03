@@ -4,10 +4,14 @@ import os
 import random
 import secrets
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 
 from bson import ObjectId
+from dotenv import load_dotenv
 from pymongo import ASCENDING, DESCENDING, MongoClient
 from pymongo.errors import DuplicateKeyError
+
+load_dotenv(Path(__file__).resolve().parents[1] / ".env")
 
 mongo_client = None
 database = None
