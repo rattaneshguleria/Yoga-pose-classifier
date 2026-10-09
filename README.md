@@ -1,71 +1,75 @@
 # YogaVision
 
-Yoga pose detection and posture analysis using MediaPipe landmarks, pose rules, optional
-ML classification, and session analytics. The app includes a React frontend, a FastAPI
-backend, MongoDB persistence, and account-based access to saved analyses.
+YogaVision is a yoga-pose recognition and posture-coaching app. It combines
+browser-based pose detection, pose rules, an optional trained classifier, and
+account-based session history.
 
 ## Features
 
-- Live Coach, image analysis, video analysis, pose library, progress dashboard, and model
-  insights.
-- Browser-based pose detection for the main coaching and analysis flows. Camera frames
-  stay on the device in those flows; server analysis endpoints are also available.
-- Register and log in with a username and password. Saved sessions and analytics are
-  associated with the logged-in user.
-- MongoDB stores users, bearer tokens, and analysis sessions. Sample sessions are added
-  when the database has no sessions; they are marked as samples and are not user data.
-- Pose rules are shared from `frontend/src/lib/poses.json` with the Python pose engine.
+- **Live Coach** with webcam analysis, camera calibration, and form feedback.
+- **Pose Analyzer** for image analysis and **Video Analysis** for sampled video
+  frames.
+- **Pose Library**, dashboard, progress charts, saved sessions, and model
+  evaluation insights.
+- **Browser-first analysis:** camera frames and uploaded media are processed in
+  the browser for the main coaching flows. The app sends landmark data, not
+  camera video, to the backend for optional trained-model classification. Saved
+  sessions contain analysis summaries.
+- **Accounts and persistence:** MongoDB stores users, login tokens, and saved
+  session summaries.
 
-## Stack
+## Project structure
 
-- Frontend: React, Vite, Tailwind CSS, MediaPipe Tasks Vision.
-- Backend: FastAPI, OpenCV, MediaPipe, PyMongo.
-- Database: MongoDB, configured with `MONGODB_URI` and `MONGODB_DATABASE`.
-- ML: rule-based classification by default; an MLP can be trained with `ml/train.py`.
+| Path | Purpose |
+| --- | --- |
+| `frontend/` | React and Vite web application |
+| `backend/` | FastAPI API, pose logic, and MongoDB storage |
+| `ml/` | Classifier training and dataset preparation scripts |
+| `data/` | Local training datasets and caches; excluded from Git |
+| `backend/models/` | Backend model and evaluation metrics |
+| `frontend/public/model.json` | Model weights served to the browser |
+| `TRAINING.md` | Dataset, licensing, and training instructions |
 
 ## Requirements
 
-- Python with the packages in `backend/requirements.txt`.
-- Node.js and npm.
-- A reachable MongoDB server, local or hosted. The default is `mongodb://localhost:27017`.
+- Python and the packages listed in `backend/requirements.txt`
+- Node.js and npm
+- A reachable MongoDB instance (local MongoDB or MongoDB Atlas)
 
-## Configure MongoDB
+## Run locally
 
-Set these environment variables before starting the backend. `MONGODB_DATABASE` is
-optional and defaults to `yogavision`.
+### 1. Configure MongoDB
 
-PowerShell, using a local MongoDB server:
+The backend loads `backend/.env` automatically. Create or update that file with
+your own connection settings. Keep it private and do not commit it:
 
-```powershell
-$env:MONGODB_URI = "mongodb://localhost:27017"
-$env:MONGODB_DATABASE = "yogavision"
-$env:CORS_ORIGINS = "http://localhost:5173"
+```dotenv
+MONGODB_URI=mongodb://localhost:27017
+MONGODB_DATABASE=yogavision
+CORS_ORIGINS=http://localhost:5173
 ```
 
-For MongoDB Atlas, set `MONGODB_URI` to the connection string from your Atlas deployment.
-Do not commit credentials or a populated `.env` file. The backend automatically loads
-`backend/.env` when it starts; environment variables already set by the deployment
-environment take precedence. `backend/.env.example` is a template and is not loaded
-automatically.
+For MongoDB Atlas, replace `MONGODB_URI` with your Atlas connection string.
+Never put database credentials in source code or share them publicly.
 
-For deployment, set `CORS_ORIGINS` on the backend to the exact frontend origin, for
-example `https://your-frontend.example.com`. Multiple origins can be comma-separated.
-The production frontend uses `VITE_API_BASE_URL` to target the backend; the provided
-`frontend/.env.production` points to the current Render API.
+### 2. Start the backend
 
-## Run Locally
-
-Start the backend in one terminal:
+In PowerShell, from the repository root:
 
 ```powershell
 cd backend
 py -m venv .venv
-.venv\Scripts\Activate.ps1
+.\.venv\Scripts\Activate.ps1
 python -m pip install -r requirements.txt
 uvicorn app.main:app --reload
 ```
 
-Start the frontend in another terminal:
+The API runs at `http://localhost:8000`. The database must be reachable when
+the backend starts.
+
+### 3. Start the frontend
+
+Open a second PowerShell terminal at the repository root:
 
 ```powershell
 cd frontend
@@ -73,56 +77,99 @@ npm install
 npm run dev
 ```
 
-Open the localhost URL printed by Vite. The Vite configuration proxies `/api` and `/ws`
-to the backend. The first server-side image or video request may download the MediaPipe
-pose model into `backend/models/`.
+Open the local URL printed by Vite, usually `http://localhost:5173`. During
+development, Vite proxies `/api` and `/ws` requests to the local backend.
+Allow camera access in the browser when using Live Coach.
 
-## Authentication and Data
+## Classifier and training data
 
-The frontend login page is at `/login`. The backend provides:
+The app can use either:
 
-- `POST /api/auth/register`, `POST /api/auth/login`, `GET /api/auth/me`, and
-  `POST /api/auth/logout`.
-- `GET /api/sessions`, `GET /api/sessions/{id}`, and `POST /api/sessions`.
-- `GET /api/analytics?days=30`.
+- **Rule-based classification**, which compares detected landmarks with the
+  authored pose rules.
+- **The trained MLP classifier**, when model weights are present. The frontend
+  reads `frontend/public/model.json`; the backend reads
+  `backend/models/model.json`.
 
-Authenticated requests use a bearer token. Session IDs are MongoDB ObjectIds represented
-as strings. User sessions are only returned to their owner; unauthenticated session
-listing is limited to public/sample records. Switching the storage backend does not
-automatically copy records from an earlier SQLite database.
+The model is used for inference without needing the original training images.
+Training data and feature caches are local under `data/` and are ignored by
+Git. Retraining generates model weights and evaluation metrics; it does not
+happen automatically when frontend code changes.
 
-## Tests
+For dataset preparation, training commands, generated artifacts, and licensing
+guidance, see [TRAINING.md](TRAINING.md). Training writes metrics to
+`backend/models/metrics.json`; the Model Insights page reads them from
+`GET /api/model/metrics`.
+
+## Data and API
+
+The backend provides:
+
+- Authentication: `POST /api/auth/register`, `POST /api/auth/login`,
+  `GET /api/auth/me`, and `POST /api/auth/logout`
+- Pose data: `GET /api/poses` and `GET /api/poses/{pose_id}`
+- Analysis: `POST /api/analyze/image`, `POST /api/analyze/video`,
+  `POST /api/analyze/posture`, and `POST /api/classify/pose`
+- Sessions: `GET /api/sessions`, `GET /api/sessions/{id}`, and
+  `POST /api/sessions`
+- Analytics and model metrics: `GET /api/analytics` and
+  `GET /api/model/metrics`
+- Live analysis WebSocket: `/ws/live-analysis`
+
+Authenticated requests use a bearer token. A user's saved sessions are
+associated with their account. When the database has no sessions, the backend
+inserts clearly marked sample sessions; these are examples, not the user's
+practice data.
+
+## Tests and production build
+
+Run the backend tests:
 
 ```powershell
 cd backend
 pytest
 ```
 
-The session-storage test uses `mongomock`, so the test suite does not require a running
-MongoDB server. The app itself does require a reachable MongoDB server at startup.
-
-## Train the Classifier
-
-See [TRAINING.md](TRAINING.md) for dataset and licensing guidance. Basic command:
+Build the frontend for production:
 
 ```powershell
-cd backend
-python ../ml/train.py --data /path/to/dataset --dataset-name "Yoga-82 (subset)" --licence "dataset licence"
+cd frontend
+npm run build
 ```
 
-Training writes model and metrics files under `backend/models/` and `frontend/public/`.
-When a trained model is present, the supported frontend flows use it instead of the
-rule-based classifier, and Model Insights displays its evaluation metrics.
+The frontend's production API base URL is configured with
+`VITE_API_BASE_URL` (currently set in `frontend/.env.production`). Set the
+backend's `CORS_ORIGINS` to the deployed frontend's exact origin. Keep
+credentials in deployment environment settings or private local environment
+files, never in committed files.
 
-## Current Limitations
+## Troubleshooting
 
-- Without a trained model, classification is a best fit against the authored pose rules.
-- Pose-comparison reference skeletons are authored for Warrior II, Tree Pose, and
-  Mountain Pose.
-- Angle thresholds are initial values and may misjudge unusual camera angles or
-  left/right mirroring.
-- Video analysis samples about four frames per second and defaults to a 120-second cap.
-- Authentication is suitable for a demo, not production as currently implemented:
-  passwords use unsalted SHA-256 hashes, and bearer tokens do not expire. Use a
-  password-hashing algorithm designed for credentials and add token expiration before
-  deploying with real users.
+- **Backend exits during startup:** verify that MongoDB is running or that the
+  Atlas connection string, network access, and database user are configured
+  correctly.
+- **Frontend cannot reach the API:** check that the backend is running on port
+  `8000` and that local requests are going through Vite's development proxy.
+- **Camera does not start:** allow camera access in the browser and ensure no
+  other application is using the camera.
+- **Model Insights says metrics are unavailable:** check that
+  `backend/models/metrics.json` exists and the backend is running.
+- **MediaPipe model does not load:** check the network connection; the browser
+  may need to download its pose model on first use.
+
+## Limitations and security
+
+- Classification quality depends on the training data, camera angle, and
+  landmark visibility. Pose-angle rules are initial values and may not suit
+  every person or camera orientation.
+- Form coaching is available only for poses with authored rules. Other model
+  predictions may be recognition-only.
+- Video analysis samples approximately four frames per second and is capped at
+  120 seconds by default.
+- Authentication is demo-grade: passwords currently use unsalted SHA-256 and
+  bearer tokens do not expire. Do not use this authentication setup for
+  production accounts or sensitive data without replacing it with
+  production-grade password hashing and token expiry.
+- Review each dataset's licence and image-level rights before redistribution
+  or commercial use. See [TRAINING.md](TRAINING.md) for dataset-specific
+  guidance.
