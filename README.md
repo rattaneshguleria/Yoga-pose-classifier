@@ -172,4 +172,6 @@ files, never in committed files.
   production-grade password hashing and token expiry.
 - Review each dataset's licence and image-level rights before redistribution
   or commercial use. See [TRAINING.md](TRAINING.md) for dataset-specific
-  guidance.
+  guidance.yo yo yo 
+
+  
